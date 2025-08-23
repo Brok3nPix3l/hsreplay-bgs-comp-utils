@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         HSReplay.net Battlegrounds Comps Utils
 // @namespace    http://tampermonkey.net/
-// @version      2025-08-22.2
+// @version      2025-08-23.1
 // @description  add utils to the HSReplay.net Battlegrounds Comps page
 // @author       Brok3nPix3l
 // @match        https://hsreplay.net/battlegrounds/comps/
@@ -33,11 +33,11 @@
     console.debug("found tierList:");
     console.debug(tierList);
     const container = document.querySelector("div.sc-joCieG.gXKmMR");
-    const checkboxContainer = document.createElement("div");
-    checkboxContainer.style.display = "flex";
-    checkboxContainer.style.gap = "20px";
-    checkboxContainer.style.flexWrap = "wrap";
-    container.prepend(checkboxContainer);
+    const filtersContainer = document.createElement("div");
+    filtersContainer.style.display = "flex";
+    filtersContainer.style.gap = "20px";
+    filtersContainer.style.flexWrap = "wrap";
+    container.prepend(filtersContainer);
 
     const tribes = [
         "beast",
@@ -95,6 +95,18 @@
     console.debug("compElementMappings:");
     console.debug(compElementMappings);
 
+    const resetButton = document.createElement("button");
+    resetButton.textContent = "Reset Filters";
+    resetButton.onclick = () => {
+        checkboxElements.forEach(checkboxElement => {
+            checkboxElement.checked = true;
+            checkboxElement.dispatchEvent(new Event("change"));
+        })
+    };
+        
+    filtersContainer.appendChild(resetButton);
+
+    const checkboxElements = [];
     tribes.forEach((tribe) => {
         const subContainer = document.createElement("div");
         const checkbox = document.createElement("input");
@@ -109,7 +121,8 @@
 
         subContainer.appendChild(checkbox);
         subContainer.appendChild(label);
-        checkboxContainer.appendChild(subContainer);
+        filtersContainer.appendChild(subContainer);
+        checkboxElements.push(checkbox);
 
         checkbox.addEventListener("change", function () {
             const comps = [];
