@@ -170,22 +170,4 @@
         const tierElement = tierElementMappings[tier].element;
         tierElement.style.display = "none";
     }
-
-    //   function updateDisplay(enable) {
-    //         [tribe, `${tribe}s`].forEach((spelling) => {
-    //             tribeToCompMappings[spelling]?.forEach((comp) => {
-    //                 console.debug(`Updating display for ${comp} to ${enable ? getDisplayStyleForComp(comp) : "none"}`);
-    //                 const compElement = compElementMappings[comp].element;
-    //                 console.debug("compElement:", compElement);
-    //                 compElement.style.display = (enable ? getDisplayStyleForComp(comp) : "none");
-    //                 const tier = compToTierMappings[comp];
-    //                 if (getAllCompElementsForTier(tier).filter((comp) => {
-    //                     comp.style.display != (enable ? getDisplayStyleForComp(comp) : "none");
-    //                 }).length == 0) {
-    //                     console.debug(`No ${enable ? "hidden" : "visible"} comps left in tier ${tier}, updating tier display to ${enable ? getDisplayStyleForTier(tier) : "none"}`);
-    //                     tierElementMappings[tier].element.style.display = (enable ? getDisplayStyleForTier(tier) : "none");
-    //                 }
-    //             });
-    //         });
-    //     }
 })();
