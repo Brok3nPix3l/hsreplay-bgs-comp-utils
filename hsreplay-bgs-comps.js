@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         HSReplay.net Battlegrounds Comps Utils
 // @namespace    http://tampermonkey.net/
-// @version      2025-08-22.1
+// @version      2025-08-22.2
 // @description  add utils to the HSReplay.net Battlegrounds Comps page
 // @author       Brok3nPix3l
 // @match        https://hsreplay.net/battlegrounds/comps/
@@ -36,6 +36,7 @@
     const checkboxContainer = document.createElement("div");
     checkboxContainer.style.display = "flex";
     checkboxContainer.style.gap = "20px";
+    checkboxContainer.style.flexWrap = "wrap";
     container.prepend(checkboxContainer);
 
     const tribes = [
@@ -104,6 +105,7 @@
         const label = document.createElement("label");
         label.htmlFor = `${tribe}-checkbox`;
         label.textContent = `${tribe.charAt(0).toUpperCase() + tribe.slice(1)}`;
+        label.style.color = "white";
 
         subContainer.appendChild(checkbox);
         subContainer.appendChild(label);
