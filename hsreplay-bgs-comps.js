@@ -29,10 +29,12 @@
   }
 
   const tierList = await wait_element(document, "div.sc-fIIVfa.dDMitD");
-  console.log("found tierList:");
-  console.log(tierList);
+  console.debug("found tierList:");
+  console.debug(tierList);
   const container = document.querySelector("div.sc-joCieG.gXKmMR");
   const checkboxContainer = document.createElement('div');
+  checkboxContainer.style.display = "flex";
+  checkboxContainer.style.gap = "20px";
   container.prepend(checkboxContainer);
 
   const tribes = [
@@ -52,7 +54,7 @@
   Array.from(tierList.children).map((tier) =>
     Array.from(tier.children[1].children).map((comp) => {
         const compName = comp.children[0].children[0].children[1].children[1].children[0].innerText;
-        console.log(compName);
+        console.debug(compName);
         const tribeName = compName.split(" ")[0].toLowerCase();
         if (!tribeToCompMappings[tribeName]) {
           tribeToCompMappings[tribeName] = new Set();
@@ -62,6 +64,7 @@
   );
 
   tribes.forEach(tribe => {
+    const subContainer = document.createElement('div');
     const checkbox = document.createElement('input');
     checkbox.type = 'checkbox';
     checkbox.id = `${tribe}-checkbox`;
@@ -69,14 +72,15 @@
 
     const label = document.createElement('label');
     label.htmlFor = `${tribe}-checkbox`;
-    label.textContent = tribe;
+    label.textContent = `${tribe.charAt(0).toUpperCase() + tribe.slice(1)}`;
 
-    checkboxContainer.appendChild(checkbox);
-    checkboxContainer.appendChild(label);
+    subContainer.appendChild(checkbox);
+    subContainer.appendChild(label);
+    checkboxContainer.appendChild(subContainer);
 
     checkbox.addEventListener('change', function() {
         if (checkbox.checked) {
-            console.log(`${tribe} is now checked!`);
+            console.debug(`${tribe} is now checked!`);
             tribeToCompMappings[tribe]?.forEach(comp => {
               comp.style.display = 'block';
             });
@@ -84,7 +88,7 @@
               comp.style.display = 'block';
             });
         } else {
-            console.log(`${tribe} is now unchecked!`);
+            console.debug(`${tribe} is now unchecked!`);
             tribeToCompMappings[tribe]?.forEach(comp => {
               comp.style.display = 'none';
             });
