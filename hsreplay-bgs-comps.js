@@ -7,7 +7,7 @@
 // @match        https://hsreplay.net/battlegrounds/comps/
 // @icon         https://www.google.com/s2/favicons?sz=64&domain=hsreplay.net
 // @grant        none
-// @license     MIT
+// @license      MIT
 // ==/UserScript==
 
 (async function () {
