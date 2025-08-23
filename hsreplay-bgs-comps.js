@@ -110,7 +110,11 @@
         checkboxContainer.appendChild(subContainer);
 
         checkbox.addEventListener("change", function () {
-            const comps = tribeToCompMappings[tribe];
+            const comps = [];
+            [tribe, `${tribe}s`].forEach(spelling => {
+                comps.push(...(tribeToCompMappings[spelling] || []));
+            });
+            console.debug(`comps to update: ${comps}`);
             if (checkbox.checked) {
                 console.debug(`${tribe} is now checked!`);
                 comps.forEach((comp) => {
