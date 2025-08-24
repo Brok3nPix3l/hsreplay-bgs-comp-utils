@@ -1,32 +1,47 @@
 // ==UserScript==
 // @name         HSReplay.net Battlegrounds Comps Utils
 // @namespace    http://tampermonkey.net/
-// @version      2025-08-23.1
+// @version      2025-08-24.1
 // @description  add utils to the HSReplay.net Battlegrounds Comps page
 // @author       Brok3nPix3l
-// @match        https://hsreplay.net/battlegrounds/comps/
+// @match        https://hsreplay.net/battlegrounds/comps/*
 // @icon         https://www.google.com/s2/favicons?sz=64&domain=hsreplay.net
-// @grant        none
+// @grant        GM_addValueChangeListener
+// @grant        GM_openInTab
+// @grant        GM_setValue
+// @grant        GM_getValue
 // @license      MIT
 // ==/UserScript==
 
 (async function () {
     "use strict";
 
-    function wait_element(root, selector) {
-        return new Promise((resolve, reject) => {
-            new MutationObserver(check).observe(root, {
-                childList: true,
-                subtree: true,
-            });
-            function check(changes, observer) {
-                let element = root.querySelector(selector);
-                if (element) {
-                    observer.disconnect();
-                    resolve(element);
-                }
-            }
-        });
+    if (location.href !== "https://hsreplay.net/battlegrounds/comps/") {
+        const shouldRetrieveData = GM_getValue(location.href + "-retrieve-when-to-commit-data", false);
+        if (!shouldRetrieveData) {
+            console.debug("Data retrieval not requested, exiting.");
+            return;
+        }
+        const guideSections = await wait_elements(document, "section.guide-content", 2);
+        console.debug("found guideSections:");
+        console.debug(guideSections);
+        const guideSection = guideSections[1];
+        console.debug("found guideSection:");
+        console.debug(guideSection);
+        const cards = guideSection.children[0];
+        console.debug("found cards:");
+        console.debug(cards);
+        const whenToCommitCard = cards.children[3];
+        console.debug("found whenToCommitCard:");
+        console.debug(whenToCommitCard);
+        const whenToCommitDetails = whenToCommitCard.children[1];
+        console.debug("found whenToCommitDetails:");
+        console.debug(whenToCommitDetails);
+        GM_setValue(`${location.href}-when-to-commit`, whenToCommitDetails.textContent);
+        console.debug(`${location.href}-when-to-commit set to: ${whenToCommitDetails.textContent}`);
+        GM_setValue(`${location.href}-retrieve-when-to-commit-data`, false);
+        window.close();
+        return;
     }
 
     const tierList = await wait_element(document, "div.sc-fIIVfa.dDMitD");
@@ -38,7 +53,7 @@
     filtersContainer.style.gap = "20px";
     filtersContainer.style.flexWrap = "wrap";
     container.prepend(filtersContainer);
-
+    
     const tribes = [
         "beast",
         "demon",
@@ -51,7 +66,7 @@
         "quilboar",
         "undead",
     ];
-
+    
     const tierToCompMappings = {};
     const tierElementMappings = [];
     const compElementMappings = [];
@@ -65,8 +80,8 @@
         };
         Array.from(tierElement.children[1].children).map((compElement) => {
             const compName =
-                compElement.children[0].children[0].children[1].children[1]
-                    .children[0].innerText;
+            compElement.children[0].children[0].children[1].children[1]
+            .children[0].innerText;
             console.debug(compName);
             compElementMappings[compName] = {
                 element: compElement,
@@ -94,7 +109,7 @@
     console.debug(tierElementMappings);
     console.debug("compElementMappings:");
     console.debug(compElementMappings);
-
+    
     const resetButton = document.createElement("button");
     resetButton.textContent = "Reset Filters";
     resetButton.onclick = () => {
@@ -103,9 +118,9 @@
             checkboxElement.dispatchEvent(new Event("change"));
         })
     };
-        
+    
     filtersContainer.appendChild(resetButton);
-
+    
     const checkboxElements = [];
     tribes.forEach((tribe) => {
         const subContainer = document.createElement("div");
@@ -113,17 +128,17 @@
         checkbox.type = "checkbox";
         checkbox.id = `${tribe}-checkbox`;
         checkbox.checked = true;
-
+        
         const label = document.createElement("label");
         label.htmlFor = `${tribe}-checkbox`;
         label.textContent = `${tribe.charAt(0).toUpperCase() + tribe.slice(1)}`;
         label.style.color = "white";
-
+        
         subContainer.appendChild(checkbox);
         subContainer.appendChild(label);
         filtersContainer.appendChild(subContainer);
         checkboxElements.push(checkbox);
-
+        
         checkbox.addEventListener("change", function () {
             const comps = [];
             [tribe, `${tribe}s`].forEach(spelling => {
@@ -150,6 +165,51 @@
         });
     });
 
+    Object.entries(compElementMappings).forEach(([comp, { element }]) => {
+        const url = element.children[0].href;
+        console.debug(`Fetching data for: ${comp} ${url}`);
+        GM_setValue(`${url}-when-to-commit`, null);
+        GM_addValueChangeListener(`${url}-when-to-commit`, function(key, oldValue, newValue, remote) {
+            console.debug(`Value for ${key} changed from ${oldValue} to ${newValue}`);
+            element.append(`When to commit: ${newValue}`);
+        });
+        GM_setValue(`${url}-retrieve-when-to-commit-data`, true);
+        GM_openInTab(url);
+    });
+
+
+    function wait_element(root, selector) {
+        return new Promise((resolve, reject) => {
+            new MutationObserver(check).observe(root, {
+                childList: true,
+                subtree: true,
+            });
+            function check(changes, observer) {
+                let element = root.querySelector(selector);
+                if (element) {
+                    observer.disconnect();
+                    resolve(element);
+                }
+            }
+        });
+    }
+    
+    function wait_elements(root, selector, count) {
+        return new Promise((resolve, reject) => {
+            new MutationObserver(check).observe(root, {
+                childList: true,
+                subtree: true,
+            });
+            function check(changes, observer) {
+                let elements = root.querySelectorAll(selector);
+                if (elements.length >= count) {
+                    observer.disconnect();
+                    resolve(elements);
+                }
+            }
+        });
+    }
+
     function getAllCompElementsForTier(tier) {
         return (
             tierToCompMappings[tier]?.map(
@@ -157,7 +217,7 @@
             ) || []
         );
     }
-
+    
     function getDisplayStyleForComp(comp) {
         return compElementMappings[comp]?.display;
     }
