@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         HSReplay.net Battlegrounds Comps Utils
 // @namespace    http://tampermonkey.net/
-// @version      2025-08-24.1
+// @version      2025-08-24.2
 // @description  add utils to the HSReplay.net Battlegrounds Comps page
 // @author       Brok3nPix3l
 // @match        https://hsreplay.net/battlegrounds/comps/*
@@ -175,6 +175,7 @@
         if (!whenToCommitDataElement) {
             whenToCommitDataElement = document.createElement('div');
             whenToCommitDataElement.className = 'when-to-commit-data';
+            whenToCommitDataElement.style.color = 'white';
             element.appendChild(whenToCommitDataElement);
         }
         const whenToCommitValue = GM_getValue(`${url}-when-to-commit`, null);
@@ -255,6 +256,7 @@
     const showWhenToCommitDataLabel = document.createElement("label");
     showWhenToCommitDataLabel.htmlFor = "show-when-to-commit-data";
     showWhenToCommitDataLabel.textContent = 'Show "When to Commit" Data';
+    showWhenToCommitDataLabel.style.color = "white";
     showWhenToCommitDataCheckboxSubContainer.appendChild(showWhenToCommitDataLabel);
 
     const fetchMissingWhenToCommitDataButtonSubContainer = document.createElement("div");
