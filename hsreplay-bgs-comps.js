@@ -50,6 +50,7 @@
     const container = document.querySelector("div.sc-joCieG.gXKmMR");
     const filtersContainer = document.createElement("div");
     filtersContainer.style.display = "flex";
+    filtersContainer.style.justifyContent = "space-between";
     filtersContainer.style.gap = "20px";
     filtersContainer.style.flexWrap = "wrap";
     filtersContainer.style.marginTop = "10px";
@@ -208,36 +209,25 @@
     //     });
     // };
     // clearWhenToCommitStorageContainer.appendChild(clearWhenToCommitButton);
+    
+    // const clearOneRandomCompWhenToCommitButton = document.createElement("button");
+    // clearOneRandomCompWhenToCommitButton.textContent = 'Clear "When to Commit" Data for one Random Comp';
+    // clearOneRandomCompWhenToCommitButton.onclick = () => {
+    //     const randomComp = Object.keys(compElementMappings)[Math.floor(Math.random() * Object.keys(compElementMappings).length)];
+    //     const url = compElementMappings[randomComp].element.children[0].href;
+    //     GM_setValue(`${url}-when-to-commit`, null);
+    // };
+    // clearWhenToCommitStorageContainer.appendChild(clearOneRandomCompWhenToCommitButton);
 
     const whenToCommitContainer = document.createElement("div");
     whenToCommitContainer.style.display = "flex";
+    whenToCommitContainer.style.justifyContent = "space-between";
     whenToCommitContainer.style.gap = "20px";
     whenToCommitContainer.style.flexWrap = "wrap";
     whenToCommitContainer.style.marginTop = "10px";
     whenToCommitContainer.style.marginBottom = "10px";
     container.prepend(whenToCommitContainer);
-
-    const whenToCommitFetchButtonSubContainer = document.createElement("div");
-    whenToCommitContainer.appendChild(whenToCommitFetchButtonSubContainer);
-
-    const whenToCommitFetchButton = document.createElement("button");
-    whenToCommitFetchButton.textContent = 'Invalidate and Fetch new "When to Commit" Data';
-    whenToCommitFetchButton.onclick = () => {
-        Object.entries(compElementMappings).forEach(([comp, { element }]) => {
-            const url = element.children[0].href;
-            console.debug(`Fetching data for: ${comp} ${url}`);
-            GM_setValue(`${url}-when-to-commit`, null);
-            GM_setValue(`${url}-retrieve-when-to-commit-data`, true);
-            GM_openInTab(url);
-        });
-    };
-    whenToCommitFetchButtonSubContainer.appendChild(whenToCommitFetchButton);
-
-    const whenToCommitFetchButtonWarningMessage = document.createElement("span");
-    whenToCommitFetchButtonWarningMessage.textContent = "⚠";
-    whenToCommitFetchButtonWarningMessage.style.color = "yellow";
-    whenToCommitFetchButtonWarningMessage.title = "(This will open a new tab for each comp, scrape the data from that tab, and then close the tab.)";
-    whenToCommitFetchButtonSubContainer.appendChild(whenToCommitFetchButtonWarningMessage);
+    
 
     const showWhenToCommitDataCheckboxSubContainer = document.createElement("div");
     whenToCommitContainer.appendChild(showWhenToCommitDataCheckboxSubContainer);
@@ -264,8 +254,53 @@
 
     const showWhenToCommitDataLabel = document.createElement("label");
     showWhenToCommitDataLabel.htmlFor = "show-when-to-commit-data";
-    showWhenToCommitDataLabel.textContent = "Show 'When to Commit' Data";
+    showWhenToCommitDataLabel.textContent = 'Show "When to Commit" Data';
     showWhenToCommitDataCheckboxSubContainer.appendChild(showWhenToCommitDataLabel);
+
+    const fetchMissingWhenToCommitDataButtonSubContainer = document.createElement("div");
+    whenToCommitContainer.appendChild(fetchMissingWhenToCommitDataButtonSubContainer);
+    
+    const fetchMissingWhenToCommitDataButton = document.createElement("button");
+    fetchMissingWhenToCommitDataButton.textContent = 'Fetch "When to Commit" Data for Missing Comps';
+    fetchMissingWhenToCommitDataButton.onclick = () => {
+        Object.entries(compElementMappings).forEach(([comp, { element }]) => {
+            const url = element.children[0].href;
+            if (GM_getValue(`${url}-when-to-commit`, null) === null) {
+                console.debug(`Fetching data for: ${comp} ${url}`);
+                GM_setValue(`${url}-retrieve-when-to-commit-data`, true);
+                GM_openInTab(url);
+            }
+        });
+    };
+    fetchMissingWhenToCommitDataButtonSubContainer.appendChild(fetchMissingWhenToCommitDataButton);
+
+    const fetchMissingWhenToCommitDataButtonWarningMessage = document.createElement("span");
+    fetchMissingWhenToCommitDataButtonWarningMessage.textContent = "⚠";
+    fetchMissingWhenToCommitDataButtonWarningMessage.style.color = "yellow";
+    fetchMissingWhenToCommitDataButtonWarningMessage.title = `This will open a new tab for each comp without "when to commit" data, scrape data, and then close the tabs`;
+    fetchMissingWhenToCommitDataButtonSubContainer.appendChild(fetchMissingWhenToCommitDataButtonWarningMessage);
+    
+    const invalidateAndFetchWhenToCommitDataButtonSubContainer = document.createElement("div");
+    whenToCommitContainer.appendChild(invalidateAndFetchWhenToCommitDataButtonSubContainer);
+
+    const invalidateAndFetchWhenToCommitDataButton = document.createElement("button");
+    invalidateAndFetchWhenToCommitDataButton.textContent = 'Fetch new "When to Commit" Data for ALL Comps';
+    invalidateAndFetchWhenToCommitDataButton.onclick = () => {
+        Object.entries(compElementMappings).forEach(([comp, { element }]) => {
+            const url = element.children[0].href;
+            console.debug(`Fetching data for: ${comp} ${url}`);
+            GM_setValue(`${url}-when-to-commit`, null);
+            GM_setValue(`${url}-retrieve-when-to-commit-data`, true);
+            GM_openInTab(url);
+        });
+    };
+    invalidateAndFetchWhenToCommitDataButtonSubContainer.appendChild(invalidateAndFetchWhenToCommitDataButton);
+
+    const invalidateAndFetchWhenToCommitDataButtonWarningMessage = document.createElement("span");
+    invalidateAndFetchWhenToCommitDataButtonWarningMessage.textContent = "⚠";
+    invalidateAndFetchWhenToCommitDataButtonWarningMessage.style.color = "red";
+    invalidateAndFetchWhenToCommitDataButtonWarningMessage.title = `This will open a new tab FOR EACH COMP (${Object.keys(compElementMappings).length}), scrape data, and then close the tabs`;
+    invalidateAndFetchWhenToCommitDataButtonSubContainer.appendChild(invalidateAndFetchWhenToCommitDataButtonWarningMessage);
 
     function wait_element(root, selector) {
         return new Promise((resolve, reject) => {
