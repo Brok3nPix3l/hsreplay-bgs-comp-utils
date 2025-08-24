@@ -52,6 +52,8 @@
     filtersContainer.style.display = "flex";
     filtersContainer.style.gap = "20px";
     filtersContainer.style.flexWrap = "wrap";
+    filtersContainer.style.marginTop = "10px";
+    filtersContainer.style.marginBottom = "10px";
     container.prepend(filtersContainer);
     
     const tribes = [
@@ -167,16 +169,103 @@
 
     Object.entries(compElementMappings).forEach(([comp, { element }]) => {
         const url = element.children[0].href;
-        console.debug(`Fetching data for: ${comp} ${url}`);
-        GM_setValue(`${url}-when-to-commit`, null);
+        console.debug(`Displaying cached "when to commit" data for: ${comp} ${url}`);
+        let whenToCommitDataElement = element.querySelector('.when-to-commit-data');
+        if (!whenToCommitDataElement) {
+            whenToCommitDataElement = document.createElement('div');
+            whenToCommitDataElement.className = 'when-to-commit-data';
+            element.appendChild(whenToCommitDataElement);
+        }
+        const whenToCommitValue = GM_getValue(`${url}-when-to-commit`, null);
+        if (whenToCommitValue === null) {
+            whenToCommitDataElement.textContent = `When to commit: No data available. Fetch data to view`;
+        } else {
+            whenToCommitDataElement.textContent = `When to commit: ${whenToCommitValue}`;
+        }
         GM_addValueChangeListener(`${url}-when-to-commit`, function(key, oldValue, newValue, remote) {
             console.debug(`Value for ${key} changed from ${oldValue} to ${newValue}`);
-            element.append(`When to commit: ${newValue}`);
+            if (newValue === null) {
+                whenToCommitDataElement.textContent = `When to commit: Unavailable`;
+            } else {
+                whenToCommitDataElement.textContent = `When to commit: ${newValue}`;
+            }
         });
-        GM_setValue(`${url}-retrieve-when-to-commit-data`, true);
-        GM_openInTab(url);
     });
+    
 
+    // const clearWhenToCommitStorageContainer = document.createElement("div");
+    // clearWhenToCommitStorageContainer.style.display = "flex";
+    // clearWhenToCommitStorageContainer.style.gap = "20px";
+    // clearWhenToCommitStorageContainer.style.flexWrap = "wrap";
+    // container.prepend(clearWhenToCommitStorageContainer);
+
+    // const clearWhenToCommitButton = document.createElement("button");
+    // clearWhenToCommitButton.textContent = 'Clear all "When to Commit" Data';
+    // clearWhenToCommitButton.onclick = () => {
+    //     Object.entries(compElementMappings).forEach(([comp, { element }]) => {
+    //         const url = element.children[0].href;
+    //         GM_setValue(`${url}-when-to-commit`, null);
+    //     });
+    // };
+    // clearWhenToCommitStorageContainer.appendChild(clearWhenToCommitButton);
+
+    const whenToCommitContainer = document.createElement("div");
+    whenToCommitContainer.style.display = "flex";
+    whenToCommitContainer.style.gap = "20px";
+    whenToCommitContainer.style.flexWrap = "wrap";
+    whenToCommitContainer.style.marginTop = "10px";
+    whenToCommitContainer.style.marginBottom = "10px";
+    container.prepend(whenToCommitContainer);
+
+    const whenToCommitFetchButtonSubContainer = document.createElement("div");
+    whenToCommitContainer.appendChild(whenToCommitFetchButtonSubContainer);
+
+    const whenToCommitFetchButton = document.createElement("button");
+    whenToCommitFetchButton.textContent = 'Invalidate and Fetch new "When to Commit" Data';
+    whenToCommitFetchButton.onclick = () => {
+        Object.entries(compElementMappings).forEach(([comp, { element }]) => {
+            const url = element.children[0].href;
+            console.debug(`Fetching data for: ${comp} ${url}`);
+            GM_setValue(`${url}-when-to-commit`, null);
+            GM_setValue(`${url}-retrieve-when-to-commit-data`, true);
+            GM_openInTab(url);
+        });
+    };
+    whenToCommitFetchButtonSubContainer.appendChild(whenToCommitFetchButton);
+
+    const whenToCommitFetchButtonWarningMessage = document.createElement("span");
+    whenToCommitFetchButtonWarningMessage.textContent = "⚠";
+    whenToCommitFetchButtonWarningMessage.style.color = "yellow";
+    whenToCommitFetchButtonWarningMessage.title = "(This will open a new tab for each comp, scrape the data from that tab, and then close the tab.)";
+    whenToCommitFetchButtonSubContainer.appendChild(whenToCommitFetchButtonWarningMessage);
+
+    const showWhenToCommitDataCheckboxSubContainer = document.createElement("div");
+    whenToCommitContainer.appendChild(showWhenToCommitDataCheckboxSubContainer);
+    
+    const showWhenToCommitDataCheckbox = document.createElement("input");
+    showWhenToCommitDataCheckbox.type = "checkbox";
+    showWhenToCommitDataCheckbox.id = "show-when-to-commit-data";
+    showWhenToCommitDataCheckbox.checked = true;
+    showWhenToCommitDataCheckbox.addEventListener("change", function () {
+        const whenToCommitDataElements = document.querySelectorAll('div.when-to-commit-data');
+        if (showWhenToCommitDataCheckbox.checked) {
+            console.debug("Showing 'When to Commit' data elements");
+            whenToCommitDataElements.forEach((dataElement) => {
+                dataElement.style.display = "block";
+            });
+        } else {
+            console.debug("Hiding 'When to Commit' data elements");
+            whenToCommitDataElements.forEach((dataElement) => {
+                dataElement.style.display = "none";
+            });
+        }
+    });
+    showWhenToCommitDataCheckboxSubContainer.appendChild(showWhenToCommitDataCheckbox);
+
+    const showWhenToCommitDataLabel = document.createElement("label");
+    showWhenToCommitDataLabel.htmlFor = "show-when-to-commit-data";
+    showWhenToCommitDataLabel.textContent = "Show 'When to Commit' Data";
+    showWhenToCommitDataCheckboxSubContainer.appendChild(showWhenToCommitDataLabel);
 
     function wait_element(root, selector) {
         return new Promise((resolve, reject) => {
