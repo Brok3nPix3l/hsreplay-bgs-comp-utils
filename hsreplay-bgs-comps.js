@@ -264,8 +264,9 @@
     
     const fetchMissingWhenToCommitDataButton = document.createElement("button");
     fetchMissingWhenToCommitDataButton.textContent = 'Fetch "When to Commit" Data for Missing Comps';
+    const fetchMissingWhenToCommitDataWarningMessage = `This will open a new tab for each comp without "when to commit" data, scrape data, and then close the tabs`;
     fetchMissingWhenToCommitDataButton.onclick = () => {
-        Object.entries(compElementMappings).forEach(([comp, { element }]) => {
+        window.confirm("Are you sure you want to fetch 'When to Commit' data for all comps missing it? " + fetchMissingWhenToCommitDataWarningMessage) && Object.entries(compElementMappings).forEach(([comp, { element }]) => {
             const url = element.children[0].href;
             if (GM_getValue(`${url}-when-to-commit`, null) === null) {
                 console.debug(`Fetching data for: ${comp} ${url}`);
@@ -279,7 +280,7 @@
     const fetchMissingWhenToCommitDataButtonWarningMessage = document.createElement("span");
     fetchMissingWhenToCommitDataButtonWarningMessage.textContent = "⚠";
     fetchMissingWhenToCommitDataButtonWarningMessage.style.color = "yellow";
-    fetchMissingWhenToCommitDataButtonWarningMessage.title = `This will open a new tab for each comp without "when to commit" data, scrape data, and then close the tabs`;
+    fetchMissingWhenToCommitDataButtonWarningMessage.title = fetchMissingWhenToCommitDataWarningMessage;
     fetchMissingWhenToCommitDataButtonSubContainer.appendChild(fetchMissingWhenToCommitDataButtonWarningMessage);
     
     const invalidateAndFetchWhenToCommitDataButtonSubContainer = document.createElement("div");
@@ -287,8 +288,9 @@
 
     const invalidateAndFetchWhenToCommitDataButton = document.createElement("button");
     invalidateAndFetchWhenToCommitDataButton.textContent = 'Fetch new "When to Commit" Data for ALL Comps';
+    const invalidateAndFetchWhenToCommitDataWarningMessage = `This will open a new tab FOR EACH COMP (${Object.keys(compElementMappings).length}), scrape data, and then close the tabs`;
     invalidateAndFetchWhenToCommitDataButton.onclick = () => {
-        Object.entries(compElementMappings).forEach(([comp, { element }]) => {
+        window.confirm("Are you sure you want to fetch new 'When to Commit' data for all comps? " + invalidateAndFetchWhenToCommitDataWarningMessage) && Object.entries(compElementMappings).forEach(([comp, { element }]) => {
             const url = element.children[0].href;
             console.debug(`Fetching data for: ${comp} ${url}`);
             GM_setValue(`${url}-when-to-commit`, null);
@@ -301,7 +303,7 @@
     const invalidateAndFetchWhenToCommitDataButtonWarningMessage = document.createElement("span");
     invalidateAndFetchWhenToCommitDataButtonWarningMessage.textContent = "⚠";
     invalidateAndFetchWhenToCommitDataButtonWarningMessage.style.color = "red";
-    invalidateAndFetchWhenToCommitDataButtonWarningMessage.title = `This will open a new tab FOR EACH COMP (${Object.keys(compElementMappings).length}), scrape data, and then close the tabs`;
+    invalidateAndFetchWhenToCommitDataButtonWarningMessage.title = invalidateAndFetchWhenToCommitDataWarningMessage;
     invalidateAndFetchWhenToCommitDataButtonSubContainer.appendChild(invalidateAndFetchWhenToCommitDataButtonWarningMessage);
 
     function wait_element(root, selector) {
