@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         HSReplay.net Battlegrounds Comps Utils
 // @namespace    http://tampermonkey.net/
-// @version      2025-08-28.1
+// @version      2025-08-29.1
 // @description  add utils to the HSReplay.net Battlegrounds Comps page
 // @author       Brok3nPix3l
 // @match        https://hsreplay.net/battlegrounds/comps/*
@@ -168,6 +168,7 @@
         });
     });
 
+    let compsMissingWhenToCommitValue = 0;
     Object.entries(compElementMappings).forEach(([comp, { element }]) => {
         const url = element.children[0].href;
         console.debug(`Displaying cached "when to commit" data for: ${comp} ${url}`);
@@ -181,6 +182,7 @@
         const whenToCommitValue = GM_getValue(`${url}-when-to-commit`, null);
         if (whenToCommitValue === null) {
             whenToCommitDataElement.textContent = `When to commit: No data available. Fetch data to view`;
+            compsMissingWhenToCommitValue++;
         } else {
             whenToCommitDataElement.textContent = `When to commit: ${whenToCommitValue}`;
         }
@@ -193,6 +195,11 @@
             }
         });
     });
+    if (compsMissingWhenToCommitValue > 0) {
+        if (window.confirm(`There are ${compsMissingWhenToCommitValue} comp(s) missing "When to Commit" data. Would you like to fetch the data now?`)) {
+            fetchMissingWhenToCommitData();
+        }
+    }
     
 
     // const clearWhenToCommitStorageContainer = document.createElement("div");
@@ -265,16 +272,7 @@
     const fetchMissingWhenToCommitDataButton = document.createElement("button");
     fetchMissingWhenToCommitDataButton.textContent = 'Fetch "When to Commit" Data for Missing Comps';
     const fetchMissingWhenToCommitDataWarningMessage = `This will open a new tab for each comp without "when to commit" data, scrape data, and then close the tabs`;
-    fetchMissingWhenToCommitDataButton.onclick = () => {
-        window.confirm("Are you sure you want to fetch 'When to Commit' data for all comps missing it? " + fetchMissingWhenToCommitDataWarningMessage) && Object.entries(compElementMappings).forEach(([comp, { element }]) => {
-            const url = element.children[0].href;
-            if (GM_getValue(`${url}-when-to-commit`, null) === null) {
-                console.debug(`Fetching data for: ${comp} ${url}`);
-                GM_setValue(`${url}-retrieve-when-to-commit-data`, true);
-                GM_openInTab(url);
-            }
-        });
-    };
+    fetchMissingWhenToCommitDataButton.onclick = () => window.confirm("Are you sure you want to fetch 'When to Commit' data for all comps missing it? " + fetchMissingWhenToCommitDataWarningMessage) && fetchMissingWhenToCommitData();
     fetchMissingWhenToCommitDataButtonSubContainer.appendChild(fetchMissingWhenToCommitDataButton);
 
     const fetchMissingWhenToCommitDataButtonWarningMessage = document.createElement("span");
@@ -306,6 +304,17 @@
     invalidateAndFetchWhenToCommitDataButtonWarningMessage.title = invalidateAndFetchWhenToCommitDataWarningMessage;
     invalidateAndFetchWhenToCommitDataButtonSubContainer.appendChild(invalidateAndFetchWhenToCommitDataButtonWarningMessage);
 
+    function fetchMissingWhenToCommitData() {
+        Object.entries(compElementMappings).forEach(([comp, { element }]) => {
+            const url = element.children[0].href;
+            if (GM_getValue(`${url}-when-to-commit`, null) === null) {
+                console.debug(`Fetching data for: ${comp} ${url}`);
+                GM_setValue(`${url}-retrieve-when-to-commit-data`, true);
+                GM_openInTab(url);
+            }
+        });
+    }
+    
     function wait_element(root, selector) {
         return new Promise((resolve, reject) => {
             new MutationObserver(check).observe(root, {
