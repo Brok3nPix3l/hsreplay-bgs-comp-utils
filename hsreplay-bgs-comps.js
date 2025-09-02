@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         HSReplay.net Battlegrounds Comps Utils
 // @namespace    http://tampermonkey.net/
-// @version      2025-08-29.1
+// @version      2025-09-02.1
 // @description  add utils to the HSReplay.net Battlegrounds Comps page
 // @author       Brok3nPix3l
 // @match        https://hsreplay.net/battlegrounds/comps/*
@@ -44,10 +44,13 @@
         return;
     }
 
-    const tierList = await wait_element(document, "div.sc-evBfig.eXbgp");
+    const main = await wait_element(document, "main");
+    const container = main.children[3];
+    console.debug("found container:");
+    console.debug(container);
+    const tierList = container.children[0].children[1];
     console.debug("found tierList:");
     console.debug(tierList);
-    const container = document.querySelector("div.sc-ibushM.htnIwU");
     const filtersContainer = document.createElement("div");
     filtersContainer.style.display = "flex";
     filtersContainer.style.justifyContent = "space-between";
