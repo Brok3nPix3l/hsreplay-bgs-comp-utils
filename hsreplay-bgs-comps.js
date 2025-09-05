@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         HSReplay.net Battlegrounds Comps Utils
 // @namespace    http://tampermonkey.net/
-// @version      2025-09-02.1
+// @version      2025-09-05.1
 // @description  add utils to the HSReplay.net Battlegrounds Comps page
 // @author       Brok3nPix3l
 // @match        https://hsreplay.net/battlegrounds/comps/*
@@ -45,6 +45,7 @@
     }
 
     const main = await wait_element(document, "main");
+    await new Promise(resolve => setTimeout(resolve, 1000));
     const container = main.children[3];
     console.debug("found container:");
     console.debug(container);
