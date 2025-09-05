@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         HSReplay.net Battlegrounds Comps Utils
 // @namespace    http://tampermonkey.net/
-// @version      2025-09-05.1
+// @version      2025-09-05.2
 // @description  add utils to the HSReplay.net Battlegrounds Comps page
 // @author       Brok3nPix3l
 // @match        https://hsreplay.net/battlegrounds/comps/*
@@ -44,12 +44,10 @@
         return;
     }
 
-    const main = await wait_element(document, "main");
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    const container = main.children[3];
+    const container = await wait_element(document, "div.sc-eiWQhh.jQslYm");
     console.debug("found container:");
     console.debug(container);
-    const tierList = container.children[0].children[1];
+    const tierList = container.querySelector("div.sc-DdDhB.gcKNIO") || await wait_element(container, "div.sc-DdDhB.gcKNIO");
     console.debug("found tierList:");
     console.debug(tierList);
     const filtersContainer = document.createElement("div");
@@ -327,6 +325,22 @@
             });
             function check(changes, observer) {
                 let element = root.querySelector(selector);
+                if (element) {
+                    observer.disconnect();
+                    resolve(element);
+                }
+            }
+        });
+    }
+    
+    function wait_element_child(root, index) {
+        return new Promise((resolve, reject) => {
+            new MutationObserver(check).observe(root, {
+                childList: true,
+                subtree: true,
+            });
+            function check(changes, observer) {
+                let element = root.children[index];
                 if (element) {
                     observer.disconnect();
                     resolve(element);
