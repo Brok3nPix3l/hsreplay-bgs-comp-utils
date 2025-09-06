@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         HSReplay.net Battlegrounds Comps Utils
 // @namespace    http://tampermonkey.net/
-// @version      2025-09-05.2
+// @version      2025-09-06.1
 // @description  add utils to the HSReplay.net Battlegrounds Comps page
 // @author       Brok3nPix3l
 // @match        https://hsreplay.net/battlegrounds/comps/*
@@ -22,7 +22,7 @@
             console.debug("Data retrieval not requested, exiting.");
             return;
         }
-        const guideSections = await wait_elements(document, "section.guide-content", 2);
+        const guideSections = await waitElements(document, "section.guide-content", 2);
         console.debug("found guideSections:");
         console.debug(guideSections);
         const guideSection = guideSections[1];
@@ -44,10 +44,19 @@
         return;
     }
 
-    const container = await wait_element(document, "div.sc-eiWQhh.jQslYm");
+    const tierColumnHeader = await waitElementWithInnerText(document.body, "div", "Tier");
+    console.debug("found tierColumnHeader:");
+    console.debug(tierColumnHeader);
+    const titleRow = tierColumnHeader.parentElement;
+    console.debug("found titleRow:");
+    console.debug(titleRow);
+    const table = titleRow.parentElement;
+    console.debug("found table:");
+    console.debug(table);
+    const container = table.parentElement;
     console.debug("found container:");
     console.debug(container);
-    const tierList = container.querySelector("div.sc-DdDhB.gcKNIO") || await wait_element(container, "div.sc-DdDhB.gcKNIO");
+    const tierList = table.children[1];
     console.debug("found tierList:");
     console.debug(tierList);
     const filtersContainer = document.createElement("div");
@@ -317,7 +326,7 @@
         });
     }
     
-    function wait_element(root, selector) {
+    function waitElement(root, selector) {
         return new Promise((resolve, reject) => {
             new MutationObserver(check).observe(root, {
                 childList: true,
@@ -333,14 +342,14 @@
         });
     }
     
-    function wait_element_child(root, index) {
+    function waitElementWithInnerText(root, selector, innerText) {
         return new Promise((resolve, reject) => {
             new MutationObserver(check).observe(root, {
                 childList: true,
                 subtree: true,
             });
             function check(changes, observer) {
-                let element = root.children[index];
+                let element = Array.from(root.querySelectorAll(selector)).find(child => child.innerText === innerText);
                 if (element) {
                     observer.disconnect();
                     resolve(element);
@@ -349,7 +358,7 @@
         });
     }
     
-    function wait_elements(root, selector, count) {
+    function waitElements(root, selector, count) {
         return new Promise((resolve, reject) => {
             new MutationObserver(check).observe(root, {
                 childList: true,
