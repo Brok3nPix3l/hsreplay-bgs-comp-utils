@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         HSReplay.net Battlegrounds Comps Utils
 // @namespace    http://tampermonkey.net/
-// @version      2025-09-06.1
+// @version      2025-09-08.1
 // @description  add utils to the HSReplay.net Battlegrounds Comps page
 // @author       Brok3nPix3l
 // @match        https://hsreplay.net/battlegrounds/comps/*
@@ -124,16 +124,30 @@
     console.debug("compElementMappings:");
     console.debug(compElementMappings);
     
-    const resetButton = document.createElement("button");
-    resetButton.textContent = "Reset Filters";
-    resetButton.onclick = () => {
+    const checkboxOptionsContainer = document.createElement("div");
+    filtersContainer.appendChild(checkboxOptionsContainer);
+    
+    const selectAllButton = document.createElement("button");
+    selectAllButton.textContent = "All";
+    selectAllButton.onclick = () => {
         checkboxElements.forEach(checkboxElement => {
             checkboxElement.checked = true;
             checkboxElement.dispatchEvent(new Event("change"));
         })
     };
     
-    filtersContainer.appendChild(resetButton);
+    checkboxOptionsContainer.appendChild(selectAllButton);
+    
+    const deselectAllButton = document.createElement("button");
+    deselectAllButton.textContent = "None";
+    deselectAllButton.onclick = () => {
+        checkboxElements.forEach(checkboxElement => {
+            checkboxElement.checked = false;
+            checkboxElement.dispatchEvent(new Event("change"));
+        })
+    };
+    
+    checkboxOptionsContainer.appendChild(deselectAllButton);
     
     const checkboxElements = [];
     tribes.forEach((tribe) => {
