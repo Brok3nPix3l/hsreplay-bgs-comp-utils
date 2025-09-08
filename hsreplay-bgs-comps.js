@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         HSReplay.net Battlegrounds Comps Utils
 // @namespace    http://tampermonkey.net/
-// @version      2025-09-08.1
+// @version      2025-09-08.2
 // @description  add utils to the HSReplay.net Battlegrounds Comps page
 // @author       Brok3nPix3l
 // @match        https://hsreplay.net/battlegrounds/comps/*
@@ -17,7 +17,7 @@
     "use strict";
 
     if (location.href !== "https://hsreplay.net/battlegrounds/comps/") {
-        const shouldRetrieveData = GM_getValue(location.href + "-retrieve-when-to-commit-data", false);
+        const shouldRetrieveData = GM_getValue(location.href + "-retrieve-detailed-comp-data", false);
         if (!shouldRetrieveData) {
             console.debug("Data retrieval not requested, exiting.");
             return;
@@ -37,9 +37,21 @@
         const whenToCommitDetails = whenToCommitCard.children[1];
         console.debug("found whenToCommitDetails:");
         console.debug(whenToCommitDetails);
+        const commonEnablersCard = cards.children[4];
+        console.debug("found commonEnablersCard:");
+        console.debug(commonEnablersCard);
+        const commonEnablersDetails = commonEnablersCard.children[1];
+        console.debug("found commonEnablersDetails:");
+        console.debug(commonEnablersDetails);
+        const commonEnablersDetailsChild = commonEnablersDetails.children[0];
+        console.debug("found commonEnablersDetailsChild:");
+        console.debug(commonEnablersDetailsChild);
+        const commonEnablersFlattenedString = Array.from(commonEnablersDetailsChild.children).map(child => child.textContent).join(', ');
         GM_setValue(`${location.href}-when-to-commit`, whenToCommitDetails.textContent);
         console.debug(`${location.href}-when-to-commit set to: ${whenToCommitDetails.textContent}`);
-        GM_setValue(`${location.href}-retrieve-when-to-commit-data`, false);
+        GM_setValue(`${location.href}-common-enablers`, commonEnablersFlattenedString);
+        console.debug(`${location.href}-common-enablers set to: ${commonEnablersFlattenedString}`);
+        GM_setValue(`${location.href}-retrieve-detailed-comp-data`, false);
         window.close();
         return;
     }
@@ -193,23 +205,46 @@
         });
     });
 
-    let compsMissingWhenToCommitValue = 0;
+    let compsMissingDetailedCompDataValue = 0;
     Object.entries(compElementMappings).forEach(([comp, { element }]) => {
         const url = element.children[0].href;
-        console.debug(`Displaying cached "when to commit" data for: ${comp} ${url}`);
-        let whenToCommitDataElement = element.querySelector('.when-to-commit-data');
-        if (!whenToCommitDataElement) {
+        console.debug(`Displaying cached "detailed comp" data for: ${comp} ${url}`);
+        let detailedCompDataElement = element.querySelector('.detailed-comp-data');
+        let whenToCommitDataElement;
+        let commonEnablersDataElement;
+        if (!detailedCompDataElement) {
+            detailedCompDataElement = document.createElement('div');
+            detailedCompDataElement.className = 'detailed-comp-data';
+            detailedCompDataElement.style.color = 'white';
+            element.appendChild(detailedCompDataElement);
+            
             whenToCommitDataElement = document.createElement('div');
             whenToCommitDataElement.className = 'when-to-commit-data';
             whenToCommitDataElement.style.color = 'white';
-            element.appendChild(whenToCommitDataElement);
+            detailedCompDataElement.appendChild(whenToCommitDataElement);
+            
+            commonEnablersDataElement = document.createElement('div');
+            commonEnablersDataElement.className = 'common-enablers-data';
+            commonEnablersDataElement.style.color = 'white';
+            detailedCompDataElement.appendChild(commonEnablersDataElement);
+        } else {
+            whenToCommitDataElement = detailedCompDataElement.querySelector('.when-to-commit-data');
+            commonEnablersDataElement = detailedCompDataElement.querySelector('.common-enablers-data');
         }
         const whenToCommitValue = GM_getValue(`${url}-when-to-commit`, null);
+        const commonEnablersValue = GM_getValue(`${url}-common-enablers`, null);
+        if (whenToCommitValue === null || commonEnablersValue === null) {
+            compsMissingDetailedCompDataValue++;
+        }
         if (whenToCommitValue === null) {
             whenToCommitDataElement.textContent = `When to commit: No data available. Fetch data to view`;
-            compsMissingWhenToCommitValue++;
         } else {
             whenToCommitDataElement.textContent = `When to commit: ${whenToCommitValue}`;
+        }
+        if (commonEnablersValue === null) {
+            commonEnablersDataElement.textContent = `Common enablers: No data available. Fetch data to view`;
+        } else {
+            commonEnablersDataElement.textContent = `Common enablers: ${commonEnablersValue}`;
         }
         GM_addValueChangeListener(`${url}-when-to-commit`, function(key, oldValue, newValue, remote) {
             console.debug(`Value for ${key} changed from ${oldValue} to ${newValue}`);
@@ -219,10 +254,18 @@
                 whenToCommitDataElement.textContent = `When to commit: ${newValue}`;
             }
         });
+        GM_addValueChangeListener(`${url}-common-enablers`, function(key, oldValue, newValue, remote) {
+            console.debug(`Value for ${key} changed from ${oldValue} to ${newValue}`);
+            if (newValue === null) {
+                commonEnablersDataElement.textContent = `Common enablers: Unavailable`;
+            } else {
+                commonEnablersDataElement.textContent = `Common enablers: ${newValue}`;
+            }
+        });
     });
-    if (compsMissingWhenToCommitValue > 0) {
-        if (window.confirm(`There are ${compsMissingWhenToCommitValue} comp(s) missing "When to Commit" data. Would you like to fetch the data now?`)) {
-            fetchMissingWhenToCommitData();
+    if (compsMissingDetailedCompDataValue > 0) {
+        if (window.confirm(`There are ${compsMissingDetailedCompDataValue} comp(s) missing "Detailed Comp Data" data. Would you like to fetch the data now?`)) {
+            fetchMissingDetailedCompData();
         }
     }
     
@@ -267,18 +310,18 @@
     
     const showWhenToCommitDataCheckbox = document.createElement("input");
     showWhenToCommitDataCheckbox.type = "checkbox";
-    showWhenToCommitDataCheckbox.id = "show-when-to-commit-data";
+    showWhenToCommitDataCheckbox.id = "show-detailed-comp-data";
     showWhenToCommitDataCheckbox.checked = true;
     showWhenToCommitDataCheckbox.addEventListener("change", function () {
-        const whenToCommitDataElements = document.querySelectorAll('div.when-to-commit-data');
+        const detailedCompDataElements = document.querySelectorAll('div.detailed-comp-data');
         if (showWhenToCommitDataCheckbox.checked) {
-            console.debug("Showing 'When to Commit' data elements");
-            whenToCommitDataElements.forEach((dataElement) => {
+            console.debug("Showing 'Detailed Comp' data elements");
+            detailedCompDataElements.forEach((dataElement) => {
                 dataElement.style.display = "block";
             });
         } else {
-            console.debug("Hiding 'When to Commit' data elements");
-            whenToCommitDataElements.forEach((dataElement) => {
+            console.debug("Hiding 'Detailed Comp' data elements");
+            detailedCompDataElements.forEach((dataElement) => {
                 dataElement.style.display = "none";
             });
         }
@@ -286,8 +329,8 @@
     showWhenToCommitDataCheckboxSubContainer.appendChild(showWhenToCommitDataCheckbox);
 
     const showWhenToCommitDataLabel = document.createElement("label");
-    showWhenToCommitDataLabel.htmlFor = "show-when-to-commit-data";
-    showWhenToCommitDataLabel.textContent = 'Show "When to Commit" Data';
+    showWhenToCommitDataLabel.htmlFor = "show-detailed-comp-data";
+    showWhenToCommitDataLabel.textContent = 'Show "Detailed Comp" Data';
     showWhenToCommitDataLabel.style.color = "white";
     showWhenToCommitDataCheckboxSubContainer.appendChild(showWhenToCommitDataLabel);
 
@@ -295,9 +338,9 @@
     whenToCommitContainer.appendChild(fetchMissingWhenToCommitDataButtonSubContainer);
     
     const fetchMissingWhenToCommitDataButton = document.createElement("button");
-    fetchMissingWhenToCommitDataButton.textContent = 'Fetch "When to Commit" Data for Missing Comps';
-    const fetchMissingWhenToCommitDataWarningMessage = `This will open a new tab for each comp without "when to commit" data, scrape data, and then close the tabs`;
-    fetchMissingWhenToCommitDataButton.onclick = () => window.confirm("Are you sure you want to fetch 'When to Commit' data for all comps missing it? " + fetchMissingWhenToCommitDataWarningMessage) && fetchMissingWhenToCommitData();
+    fetchMissingWhenToCommitDataButton.textContent = 'Fetch "Detailed Comp" Data for Missing Comps';
+    const fetchMissingWhenToCommitDataWarningMessage = `This will open a new tab for each comp without "detailed comp" data, scrape data, and then close the tabs`;
+    fetchMissingWhenToCommitDataButton.onclick = () => window.confirm("Are you sure you want to fetch 'Detailed Comp' data for all comps missing it? " + fetchMissingWhenToCommitDataWarningMessage) && fetchMissingDetailedCompData();
     fetchMissingWhenToCommitDataButtonSubContainer.appendChild(fetchMissingWhenToCommitDataButton);
 
     const fetchMissingWhenToCommitDataButtonWarningMessage = document.createElement("span");
@@ -310,14 +353,15 @@
     whenToCommitContainer.appendChild(invalidateAndFetchWhenToCommitDataButtonSubContainer);
 
     const invalidateAndFetchWhenToCommitDataButton = document.createElement("button");
-    invalidateAndFetchWhenToCommitDataButton.textContent = 'Fetch new "When to Commit" Data for ALL Comps';
+    invalidateAndFetchWhenToCommitDataButton.textContent = 'Fetch new "Detailed Comp" Data for ALL Comps';
     const invalidateAndFetchWhenToCommitDataWarningMessage = `This will open a new tab FOR EACH COMP (${Object.keys(compElementMappings).length}), scrape data, and then close the tabs`;
     invalidateAndFetchWhenToCommitDataButton.onclick = () => {
-        window.confirm("Are you sure you want to fetch new 'When to Commit' data for all comps? " + invalidateAndFetchWhenToCommitDataWarningMessage) && Object.entries(compElementMappings).forEach(([comp, { element }]) => {
+        window.confirm("Are you sure you want to fetch new 'Detailed Comp' data for all comps? " + invalidateAndFetchWhenToCommitDataWarningMessage) && Object.entries(compElementMappings).forEach(([comp, { element }]) => {
             const url = element.children[0].href;
             console.debug(`Fetching data for: ${comp} ${url}`);
             GM_setValue(`${url}-when-to-commit`, null);
-            GM_setValue(`${url}-retrieve-when-to-commit-data`, true);
+            GM_setValue(`${url}-common-enablers`, null);
+            GM_setValue(`${url}-retrieve-detailed-comp-data`, true);
             GM_openInTab(url);
         });
     };
@@ -329,12 +373,12 @@
     invalidateAndFetchWhenToCommitDataButtonWarningMessage.title = invalidateAndFetchWhenToCommitDataWarningMessage;
     invalidateAndFetchWhenToCommitDataButtonSubContainer.appendChild(invalidateAndFetchWhenToCommitDataButtonWarningMessage);
 
-    function fetchMissingWhenToCommitData() {
+    function fetchMissingDetailedCompData() {
         Object.entries(compElementMappings).forEach(([comp, { element }]) => {
             const url = element.children[0].href;
-            if (GM_getValue(`${url}-when-to-commit`, null) === null) {
+            if ((GM_getValue(`${url}-when-to-commit`, null) === null) || (GM_getValue(`${url}-common-enablers`, null) === null)) {
                 console.debug(`Fetching data for: ${comp} ${url}`);
-                GM_setValue(`${url}-retrieve-when-to-commit-data`, true);
+                GM_setValue(`${url}-retrieve-detailed-comp-data`, true);
                 GM_openInTab(url);
             }
         });
