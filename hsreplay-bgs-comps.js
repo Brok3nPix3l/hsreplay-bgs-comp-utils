@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         HSReplay.net Battlegrounds Comps Utils
 // @namespace    http://tampermonkey.net/
-// @version      2025-09-14.1
+// @version      2025-09-14.2
 // @description  add utils to the HSReplay.net Battlegrounds Comps page
 // @author       Brok3nPix3l
 // @match        https://hsreplay.net/battlegrounds/comps/*
@@ -169,7 +169,7 @@
 
     const memoryStore = [];
     const memoryStoreButton = document.createElement("button");
-    memoryStoreButton.textContent = "Save Filters";
+    memoryStoreButton.textContent = "Save";
     memoryStoreButton.onclick = () => {
         memoryStore.length = 0;
         checkboxElements.forEach(checkboxElement => {
@@ -181,7 +181,7 @@
     checkboxMemoryOptionsContainer.appendChild(memoryStoreButton);
 
     const memoryRestoreButton = document.createElement("button");
-    memoryRestoreButton.textContent = "Restore Filters";
+    memoryRestoreButton.textContent = "Restore";
     memoryRestoreButton.onclick = () => {
         checkboxElements.forEach((checkboxElement, index) => {
             checkboxElement.checked = memoryStore[index] || false;
