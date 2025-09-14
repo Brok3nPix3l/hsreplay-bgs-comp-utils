@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         HSReplay.net Battlegrounds Comps Utils
 // @namespace    http://tampermonkey.net/
-// @version      2025-09-08.2
+// @version      2025-09-14.1
 // @description  add utils to the HSReplay.net Battlegrounds Comps page
 // @author       Brok3nPix3l
 // @match        https://hsreplay.net/battlegrounds/comps/*
@@ -139,6 +139,9 @@
     const checkboxOptionsContainer = document.createElement("div");
     filtersContainer.appendChild(checkboxOptionsContainer);
     
+    const allOrNoneContainer = document.createElement("div");
+    checkboxOptionsContainer.appendChild(allOrNoneContainer);
+    
     const selectAllButton = document.createElement("button");
     selectAllButton.textContent = "All";
     selectAllButton.onclick = () => {
@@ -148,7 +151,7 @@
         })
     };
     
-    checkboxOptionsContainer.appendChild(selectAllButton);
+    allOrNoneContainer.appendChild(selectAllButton);
     
     const deselectAllButton = document.createElement("button");
     deselectAllButton.textContent = "None";
@@ -159,8 +162,35 @@
         })
     };
     
-    checkboxOptionsContainer.appendChild(deselectAllButton);
-    
+    allOrNoneContainer.appendChild(deselectAllButton);
+
+    const checkboxMemoryOptionsContainer = document.createElement("div");
+    checkboxOptionsContainer.appendChild(checkboxMemoryOptionsContainer);
+
+    const memoryStore = [];
+    const memoryStoreButton = document.createElement("button");
+    memoryStoreButton.textContent = "Save Filters";
+    memoryStoreButton.onclick = () => {
+        memoryStore.length = 0;
+        checkboxElements.forEach(checkboxElement => {
+            memoryStore.push(checkboxElement.checked);
+        });
+        console.debug("Saved filter state to memory:", memoryStore);
+    };
+
+    checkboxMemoryOptionsContainer.appendChild(memoryStoreButton);
+
+    const memoryRestoreButton = document.createElement("button");
+    memoryRestoreButton.textContent = "Restore Filters";
+    memoryRestoreButton.onclick = () => {
+        checkboxElements.forEach((checkboxElement, index) => {
+            checkboxElement.checked = memoryStore[index] || false;
+            checkboxElement.dispatchEvent(new Event("change"));
+        });
+    };
+
+    checkboxMemoryOptionsContainer.appendChild(memoryRestoreButton);
+
     const checkboxElements = [];
     tribes.forEach((tribe) => {
         const subContainer = document.createElement("div");
