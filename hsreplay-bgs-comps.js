@@ -176,6 +176,8 @@
             memoryStore.push(checkboxElement.checked);
         });
         console.debug("Saved filter state to memory:", memoryStore);
+        // display toast message saying "Filter state saved"
+        displayToast("Filter state saved");
     };
 
     checkboxMemoryOptionsContainer.appendChild(memoryStoreButton);
@@ -500,5 +502,40 @@
         console.debug(`Hiding tier: ${tier}`);
         const tierElement = tierElementMappings[tier].element;
         tierElement.style.display = "none";
+    }
+
+    function displayToast(message, duration = 3000) {
+        const toast = document.createElement("div");
+        toast.className = "toast";
+        toast.textContent = message;
+        toast.style.position = "fixed";
+        toast.style.bottom = "10px";
+        toast.style.left = "10px";
+        toast.style.backgroundColor = "black";
+        toast.style.color = "white";
+        toast.style.padding = "10px";
+        toast.style.borderRadius = "5px";
+        toast.style.zIndex = "1000";
+        toast.style.opacity = "0.8";
+        toast.style.transition = "opacity 0.3s ease-in-out";
+        toast.style.boxShadow = "0 0 10px 0 rgba(0, 0, 0, 0.5)";
+        toast.style.fontSize = "14px";
+        toast.style.fontWeight = "bold";
+        toast.style.textAlign = "center";
+        toast.style.width = "fit-content";
+        toast.style.maxWidth = "80%";
+        toast.style.whiteSpace = "nowrap";
+        toast.style.overflow = "hidden";
+        toast.style.textOverflow = "ellipsis";
+        toast.style.wordBreak = "break-word";
+        toast.style.cursor = "pointer";
+        document.body.appendChild(toast);
+        const timeout = setTimeout(() => {
+            toast.remove();
+        }, duration);
+        toast.onclick = () => {
+            toast.remove();
+            clearTimeout(timeout);
+        };
     }
 })();
