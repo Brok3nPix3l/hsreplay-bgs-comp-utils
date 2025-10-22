@@ -1,3 +1,4 @@
 TODO:
-- Make it so hovering card names in "When to Commit" description displays card image, like on comp pages
-- Add more data from comp pages (like "When to Commit")
+- Make it so hovering card names in "Detailed Comp" description displays card image, like on comp pages
+- Fix formatting of "Detailed Comp" data when more than one text box on the detailed comp page. e.g. Mechs - Divine Shield When to commit: Gleaming Trader + Divine Shields (Holo Rover, Grease Bot)Super Constructor + Divine Sparkbot
+- Invalidate "Detailed Comp" data when the underlying detailed comp page changes. Will need some investigation. Maybe the data provided by the source page itself will change in a meaningful enough way and can just read that? Might have to periodically check the detailed comp page itself
